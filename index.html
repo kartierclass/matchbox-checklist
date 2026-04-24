@@ -855,7 +855,7 @@ function renderTasks() {
 
   const categories = [...new Set(filtered.map(t => t.category))];
   const doneIds = new Set(allEntries.filter(e => e.is_done).map(e => e.task_id));
-  const locked = !isToday || currentUser.role === 'manager' || currentUser.role === 'admin';
+  const locked = !isToday;
 
   let html = '';
   categories.forEach(cat => {
