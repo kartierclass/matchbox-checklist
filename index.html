@@ -715,6 +715,49 @@
     margin-top: 6px;
   }
 
+  .exp-entry {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    gap: 12px;
+  }
+
+  .exp-entry-left { flex: 1; }
+  .exp-entry-desc { font-size: 14px; color: var(--text); margin-bottom: 3px; }
+  .exp-entry-meta { font-size: 11px; color: var(--muted); }
+  .exp-entry-inv { font-size: 11px; color: var(--green); margin-top: 2px; }
+
+  .exp-entry-right { text-align: right; flex-shrink: 0; }
+  .exp-amount { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 1px; color: var(--text); }
+  .exp-payment { font-size: 11px; color: var(--muted); }
+
+  .exp-cat-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(0,230,118,0.08);
+    color: var(--green);
+    margin-right: 6px;
+  }
+
+  .summary-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .summary-card-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .summary-card-amt { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; color: var(--text); line-height: 1; }
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -775,6 +818,7 @@
     <button class="tab active" onclick="switchTab('checklist', this)">Checklist</button>
     <button class="tab" onclick="switchTab('history', this)">History</button>
     <button class="tab" id="inventory-tab" onclick="switchTab('inventory', this)">Inventory</button>
+    <button class="tab hidden" id="expenses-tab" onclick="switchTab('expenses', this)">Expenses</button>
     <button class="tab hidden" id="admin-tab" onclick="switchTab('admin', this)">Admin</button>
   </div>
 
@@ -838,6 +882,73 @@
         <button class="modal-confirm" onclick="submitStock()">Log Stock</button>
       </div>
     </div>
+  </div>
+
+  <!-- EXPENSES TAB -->
+  <div class="content hidden" id="tab-expenses">
+    <div class="date-header">
+      <div class="date-display"><small>Expenses</small><span id="exp-month-display">—</span></div>
+      <div class="progress-pill">Total: <b id="exp-total-display">₹0</b></div>
+    </div>
+
+    <!-- Month picker -->
+    <div style="display:flex;gap:10px;margin-bottom:24px;align-items:center;flex-wrap:wrap">
+      <input type="month" class="date-picker" id="exp-month-picker" onchange="loadExpenses()">
+      <select class="form-select" id="exp-cat-filter" onchange="loadExpenses()" style="width:auto">
+        <option value="all">All Categories</option>
+        <option value="Inventory">Inventory</option>
+        <option value="Utilities">Utilities</option>
+        <option value="Rent">Rent</option>
+        <option value="Maintenance">Maintenance</option>
+        <option value="Salaries">Salaries</option>
+        <option value="Marketing">Marketing</option>
+        <option value="Miscellaneous">Miscellaneous</option>
+      </select>
+    </div>
+
+    <!-- Monthly summary cards -->
+    <div id="exp-summary-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px"></div>
+
+    <!-- Log expense form -->
+    <div class="add-task-form" style="margin-bottom:28px">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Log Expense / Purchase</div>
+      <div class="form-row">
+        <input class="form-input" id="exp-desc" placeholder="Description" />
+        <input class="form-input" id="exp-amount" type="number" placeholder="Amount (₹)" inputmode="decimal" />
+      </div>
+      <div class="form-row">
+        <select class="form-select" id="exp-category">
+          <option value="Inventory">Inventory</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Rent">Rent</option>
+          <option value="Maintenance">Maintenance</option>
+          <option value="Salaries">Salaries</option>
+          <option value="Marketing">Marketing</option>
+          <option value="Miscellaneous">Miscellaneous</option>
+        </select>
+        <select class="form-select" id="exp-payment">
+          <option value="Cash">Cash</option>
+          <option value="UPI">UPI</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
+      </div>
+      <!-- Inventory link (shows only when category = Inventory) -->
+      <div id="inv-link-row" class="form-row" style="display:none">
+        <select class="form-select" id="exp-inv-item">
+          <option value="">— Link to inventory item (optional) —</option>
+        </select>
+        <input class="form-input" id="exp-inv-qty" type="number" placeholder="Qty purchased" inputmode="numeric" />
+      </div>
+      <div class="form-row">
+        <input class="form-input" id="exp-date" type="date" />
+        <button class="add-btn" onclick="logExpense()" style="white-space:nowrap">+ Log Expense</button>
+      </div>
+    </div>
+
+    <!-- Expense log -->
+    <div class="section-heading" style="margin-bottom:16px">Recent Entries</div>
+    <div id="exp-log-container"><div class="loader"><div class="spinner"></div> Loading...</div></div>
   </div>
 
   <!-- ADMIN TAB -->
@@ -973,8 +1084,13 @@ function loginSuccess(user) {
   // Show admin tab only for admin
   if (user.role === 'admin') {
     document.getElementById('admin-tab').classList.remove('hidden');
+    document.getElementById('expenses-tab').classList.remove('hidden');
     loadAdminTasks();
     loadUsers();
+  }
+
+  if (user.role === 'manager') {
+    document.getElementById('expenses-tab').classList.remove('hidden');
   }
 
   // History tab for manager + admin
@@ -999,7 +1115,7 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tabs-bar .tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentTab = tab;
-  ['checklist','history','admin','inventory'].forEach(t => {
+  ['checklist','history','admin','inventory','expenses'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'history' && !document.getElementById('history-date').value) {
@@ -1008,6 +1124,7 @@ function switchTab(tab, btn) {
   }
   if (tab === 'admin') { loadAdminTasks(); loadUsers(); }
   if (tab === 'inventory') { loadInventory(); }
+  if (tab === 'expenses') { initExpenses(); }
 }
 
 function switchFreq(freq, btn) {
@@ -1273,6 +1390,141 @@ async function loadInventory() {
   container.innerHTML = html;
   const badge = document.getElementById('low-stock-count');
   badge.innerHTML = lowCount > 0 ? `<b style="color:var(--red)">${lowCount} low</b>` : `<b>All good ✓</b>`;
+}
+
+// ── EXPENSES ──
+function initExpenses() {
+  const picker = document.getElementById('exp-month-picker');
+  if (!picker.value) {
+    const now = new Date();
+    picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+  document.getElementById('exp-date').value = today();
+
+  // Populate inventory item dropdown
+  api('tasks?minimum_qty=not.is.null&is_active=eq.true&select=id,title').then(items => {
+    const sel = document.getElementById('exp-inv-item');
+    sel.innerHTML = '<option value="">— Link to inventory item (optional) —</option>';
+    items.forEach(i => sel.innerHTML += `<option value="${i.id}">${i.title}</option>`);
+  });
+
+  // Show/hide inventory link row based on category
+  document.getElementById('exp-category').onchange = function() {
+    document.getElementById('inv-link-row').style.display = this.value === 'Inventory' ? 'grid' : 'none';
+  };
+
+  loadExpenses();
+}
+
+async function loadExpenses() {
+  const month = document.getElementById('exp-month-picker').value;
+  const catFilter = document.getElementById('exp-cat-filter').value;
+  if (!month) return;
+
+  const [year, mon] = month.split('-');
+  const startDate = `${year}-${mon}-01`;
+  const endDate = new Date(year, mon, 0).toISOString().split('T')[0]; // last day of month
+
+  document.getElementById('exp-month-display').textContent = new Date(year, mon-1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
+
+  let query = `expenses?date=gte.${startDate}&date=lte.${endDate}&order=logged_at.desc&select=*`;
+  if (catFilter !== 'all') query += `&category=eq.${catFilter}`;
+
+  const expenses = await api(query);
+
+  // Summary by category
+  const totals = {};
+  let grandTotal = 0;
+  expenses.forEach(e => {
+    totals[e.category] = (totals[e.category] || 0) + parseFloat(e.amount);
+    grandTotal += parseFloat(e.amount);
+  });
+
+  document.getElementById('exp-total-display').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
+
+  const summaryGrid = document.getElementById('exp-summary-grid');
+  summaryGrid.innerHTML = Object.entries(totals).map(([cat, amt]) => `
+    <div class="summary-card">
+      <div class="summary-card-label">${cat}</div>
+      <div class="summary-card-amt">₹${amt.toLocaleString('en-IN')}</div>
+    </div>`).join('');
+
+  // Log entries
+  const container = document.getElementById('exp-log-container');
+  if (!expenses.length) { container.innerHTML = `<div class="loader" style="color:var(--muted)">No expenses this month</div>`; return; }
+
+  container.innerHTML = expenses.map(e => `
+    <div class="exp-entry">
+      <div class="exp-entry-left">
+        <div class="exp-entry-desc">
+          <span class="exp-cat-badge">${e.category}</span>${e.description}
+        </div>
+        <div class="exp-entry-meta">${new Date(e.date+'T00:00:00').toLocaleDateString('en-IN', {day:'numeric',month:'short'})} · ${e.payment_method || '—'}</div>
+        ${e.linked_task_id ? `<div class="exp-entry-inv">↗ Updates inventory</div>` : ''}
+      </div>
+      <div class="exp-entry-right">
+        <div class="exp-amount">₹${parseFloat(e.amount).toLocaleString('en-IN')}</div>
+      </div>
+    </div>`).join('');
+}
+
+async function logExpense() {
+  const desc = document.getElementById('exp-desc').value.trim();
+  const amount = parseFloat(document.getElementById('exp-amount').value);
+  const category = document.getElementById('exp-category').value;
+  const payment = document.getElementById('exp-payment').value;
+  const date = document.getElementById('exp-date').value;
+  const linkedTaskId = document.getElementById('exp-inv-item').value || null;
+  const invQty = parseInt(document.getElementById('exp-inv-qty').value) || null;
+
+  if (!desc || isNaN(amount) || amount <= 0 || !date) { alert('Fill in description, amount and date'); return; }
+
+  // Log the expense
+  await api('expenses', {
+    method: 'POST',
+    body: JSON.stringify({
+      user_id: currentUser.id,
+      location: currentUser.location || 'Hebbal',
+      date,
+      category,
+      description: desc,
+      amount,
+      payment_method: payment,
+      linked_task_id: linkedTaskId,
+      quantity: invQty
+    })
+  });
+
+  // If linked to inventory item and qty provided, log a stock entry too
+  if (linkedTaskId && invQty !== null) {
+    const task = await api(`tasks?id=eq.${linkedTaskId}&select=*`);
+    if (task[0]) {
+      // Get today's latest stock log for this item
+      const existing = await api(`stock_logs?task_id=eq.${linkedTaskId}&date=eq.${date}&select=*&order=logged_at.desc&limit=1`);
+      const currentQty = existing[0] ? existing[0].quantity : 0;
+      const newQty = currentQty + invQty;
+
+      await api('stock_logs', {
+        method: 'POST',
+        body: JSON.stringify({
+          task_id: linkedTaskId,
+          user_id: currentUser.id,
+          location: currentUser.location || 'Hebbal',
+          date,
+          quantity: newQty,
+          minimum: task[0].minimum_qty
+        })
+      });
+    }
+  }
+
+  // Clear form
+  document.getElementById('exp-desc').value = '';
+  document.getElementById('exp-amount').value = '';
+  document.getElementById('exp-inv-qty').value = '';
+  document.getElementById('exp-inv-item').value = '';
+
+  loadExpenses();
 }
 
 // ── ADMIN: TASKS ──
