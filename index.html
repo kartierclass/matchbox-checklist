@@ -550,6 +550,176 @@
     margin-top: 4px;
   }
 
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .modal {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 100%;
+    max-width: 340px;
+    animation: fadeUp 0.25s ease;
+  }
+
+  .modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 1px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  .modal-min {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .modal-min b { color: var(--amber); }
+
+  .qty-input {
+    width: 100%;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    margin-bottom: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .qty-input:focus { border-color: var(--green); }
+
+  .modal-warning {
+    background: rgba(255,61,61,0.08);
+    border: 1px solid rgba(255,61,61,0.2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--red);
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .modal-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .modal-cancel {
+    padding: 12px;
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .modal-cancel:hover { border-color: var(--red); color: var(--red); }
+
+  .modal-confirm {
+    padding: 12px;
+    background: var(--green);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .modal-confirm:hover { background: var(--green-dim); }
+
+  /* ── INVENTORY TAB ── */
+  .inv-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .inv-card {
+    background: var(--dark2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    transition: border-color 0.2s;
+  }
+
+  .inv-card.low { border-color: rgba(255,61,61,0.4); background: rgba(255,61,61,0.04); }
+  .inv-card.ok { border-color: rgba(0,230,118,0.2); }
+
+  .inv-item-name {
+    font-size: 12px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .inv-qty {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 40px;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .inv-card.low .inv-qty { color: var(--red); }
+  .inv-card.ok .inv-qty { color: var(--green); }
+  .inv-card:not(.low):not(.ok) .inv-qty { color: var(--muted); }
+
+  .inv-min {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .inv-warning-badge {
+    display: inline-block;
+    background: rgba(255,61,61,0.1);
+    color: var(--red);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-top: 6px;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   /* Animations */
   @keyframes fadeUp {
     from { opacity: 0; transform: translateY(12px); }
@@ -604,6 +774,7 @@
   <div class="tabs-bar" id="tabs-bar">
     <button class="tab active" onclick="switchTab('checklist', this)">Checklist</button>
     <button class="tab" onclick="switchTab('history', this)">History</button>
+    <button class="tab" id="inventory-tab" onclick="switchTab('inventory', this)">Inventory</button>
     <button class="tab hidden" id="admin-tab" onclick="switchTab('admin', this)">Admin</button>
   </div>
 
@@ -643,6 +814,30 @@
       <div class="stat-card"><div class="stat-num" id="h-pct">—</div><div class="stat-label">% Done</div></div>
     </div>
     <div id="history-container"><div class="loader"><div class="spinner"></div> Select a date above</div></div>
+  </div>
+
+  <!-- INVENTORY TAB -->
+  <div class="content hidden" id="tab-inventory">
+    <div class="date-header">
+      <div class="date-display"><small>Stock Levels</small>Today</div>
+      <div id="low-stock-count" class="progress-pill"></div>
+    </div>
+    <div id="inventory-container"><div class="loader"><div class="spinner"></div> Loading...</div></div>
+  </div>
+
+  <!-- STOCK MODAL -->
+  <div class="modal-overlay hidden" id="stock-modal">
+    <div class="modal">
+      <div class="modal-title" id="modal-task-name">Item</div>
+      <div class="modal-sub">Enter current quantity on hand</div>
+      <div class="modal-min">Minimum required: <b id="modal-min-qty">—</b></div>
+      <input class="qty-input" type="number" inputmode="numeric" id="modal-qty-input" min="0" placeholder="0">
+      <div class="modal-warning" id="modal-warning">⚠️ Below minimum! This will be flagged in inventory.</div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeStockModal()">Cancel</button>
+        <button class="modal-confirm" onclick="submitStock()">Log Stock</button>
+      </div>
+    </div>
   </div>
 
   <!-- ADMIN TAB -->
@@ -804,7 +999,7 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tabs-bar .tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentTab = tab;
-  ['checklist','history','admin'].forEach(t => {
+  ['checklist','history','admin','inventory'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'history' && !document.getElementById('history-date').value) {
@@ -812,6 +1007,7 @@ function switchTab(tab, btn) {
     loadHistory();
   }
   if (tab === 'admin') { loadAdminTasks(); loadUsers(); }
+  if (tab === 'inventory') { loadInventory(); }
 }
 
 function switchFreq(freq, btn) {
@@ -860,25 +1056,25 @@ function renderTasks() {
   let html = '';
   categories.forEach(cat => {
     const tasks = filtered.filter(t => t.category === cat);
-    html += `<div class="category-block">
-      <div class="category-title">${cat}</div>`;
+    html += `<div class="category-block"><div class="category-title">${cat}</div>`;
     tasks.forEach(t => {
       const done = doneIds.has(t.id);
+      const isInventory = t.minimum_qty !== null;
+      const clickAction = locked ? '' : isInventory ? `openStockModal('${t.id}')` : `toggleTask('${t.id}')`;
       html += `<div class="task-card ${done?'done':''} ${locked?'locked':''}" 
-        onclick="${locked?'':` toggleTask('${t.id}')`}" data-id="${t.id}">
+        onclick="${clickAction}" data-id="${t.id}">
         <div class="checkbox">
           <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
             <path d="M1 5L4.5 8.5L11 1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </div>
-        <div class="task-text">${t.title}</div>
+        <div class="task-text">${t.title}${isInventory ? ' <span style="font-size:11px;color:var(--muted);margin-left:4px">· tap to log</span>' : ''}</div>
       </div>`;
     });
     html += `</div>`;
   });
 
   container.innerHTML = html;
-
   const total = filtered.length;
   const done = filtered.filter(t => doneIds.has(t.id)).length;
   updateProgress(done, total);
@@ -954,6 +1150,129 @@ async function loadHistory() {
     html += `</div>`;
   });
   container.innerHTML = html;
+}
+
+// ── STOCK MODAL ──
+let activeStockTaskId = null;
+
+function openStockModal(taskId) {
+  if (!isToday) return;
+  const task = allTasks.find(t => t.id === taskId);
+  if (!task) return;
+  activeStockTaskId = taskId;
+  document.getElementById('modal-task-name').textContent = task.title;
+  document.getElementById('modal-min-qty').textContent = task.minimum_qty;
+  document.getElementById('modal-qty-input').value = '';
+  document.getElementById('modal-warning').style.display = 'none';
+  document.getElementById('stock-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-qty-input').focus(), 100);
+}
+
+function closeStockModal() {
+  document.getElementById('stock-modal').classList.add('hidden');
+  activeStockTaskId = null;
+}
+
+document.getElementById('modal-qty-input')?.addEventListener('input', function() {
+  const task = allTasks.find(t => t.id === activeStockTaskId);
+  if (!task) return;
+  const val = parseInt(this.value);
+  const warning = document.getElementById('modal-warning');
+  warning.style.display = (!isNaN(val) && val < task.minimum_qty) ? 'block' : 'none';
+});
+
+async function submitStock() {
+  const task = allTasks.find(t => t.id === activeStockTaskId);
+  const qty = parseInt(document.getElementById('modal-qty-input').value);
+  if (isNaN(qty) || qty < 0) { alert('Enter a valid quantity'); return; }
+
+  // Log to stock_logs
+  await api('stock_logs', {
+    method: 'POST',
+    body: JSON.stringify({
+      task_id: task.id,
+      user_id: currentUser.id,
+      location: currentUser.location || 'Hebbal',
+      date: today(),
+      quantity: qty,
+      minimum: task.minimum_qty
+    })
+  });
+
+  // Also tick the checklist entry
+  const existing = allEntries.find(e => e.task_id === task.id);
+  if (existing) {
+    await api(`checklist_entries?id=eq.${existing.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_done: true, submitted_at: new Date().toISOString() })
+    });
+    existing.is_done = true;
+  } else {
+    const res = await api('checklist_entries', {
+      method: 'POST',
+      body: JSON.stringify({
+        task_id: task.id,
+        user_id: currentUser.id,
+        location: currentUser.location || 'Hebbal',
+        date: today(),
+        is_done: true,
+        submitted_at: new Date().toISOString()
+      })
+    });
+    if (res[0]) allEntries.push(res[0]);
+  }
+
+  closeStockModal();
+  renderTasks();
+}
+
+// ── INVENTORY TAB ──
+async function loadInventory() {
+  const container = document.getElementById('inventory-container');
+  container.innerHTML = `<div class="loader"><div class="spinner"></div> Loading...</div>`;
+
+  // Get all inventory tasks (ones with minimum_qty set)
+  const tasks = await api(`tasks?minimum_qty=not.is.null&is_active=eq.true&select=*`);
+  if (!tasks.length) { container.innerHTML = `<div class="loader">No inventory items found</div>`; return; }
+
+  const taskIds = tasks.map(t => t.id).join(',');
+  // Get latest stock log per task for today
+  const logs = await api(`stock_logs?task_id=in.(${taskIds})&date=eq.${today()}&select=*&order=logged_at.desc`);
+
+  // Get latest log per task
+  const latestLog = {};
+  logs.forEach(l => { if (!latestLog[l.task_id]) latestLog[l.task_id] = l; });
+
+  let lowCount = 0;
+  const cats = [...new Set(tasks.map(t => t.category))];
+  let html = '';
+
+  cats.forEach(cat => {
+    html += `<div class="category-block"><div class="category-title">${cat}</div><div class="inv-grid">`;
+    tasks.filter(t => t.category === cat).forEach(t => {
+      const log = latestLog[t.id];
+      const qty = log ? log.quantity : null;
+      const isLow = qty !== null && qty < t.minimum_qty;
+      const isOk = qty !== null && qty >= t.minimum_qty;
+      if (isLow) lowCount++;
+
+      // Clean display name (strip the "- X" minimum hint from title)
+      const name = t.title.replace(/\s*-\s*\d+(\s+sets?)?$/i, '').trim();
+
+      html += `<div class="inv-card ${isLow?'low':isOk?'ok':''}">
+        <div class="inv-item-name">${name}</div>
+        <div class="inv-qty">${qty !== null ? qty : '—'}</div>
+        <div class="inv-min">Min: ${t.minimum_qty}</div>
+        ${isLow ? '<div class="inv-warning-badge">LOW STOCK</div>' : ''}
+        ${qty === null ? '<div style="font-size:11px;color:var(--muted);margin-top:6px">Not logged today</div>' : ''}
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  container.innerHTML = html;
+  const badge = document.getElementById('low-stock-count');
+  badge.innerHTML = lowCount > 0 ? `<b style="color:var(--red)">${lowCount} low</b>` : `<b>All good ✓</b>`;
 }
 
 // ── ADMIN: TASKS ──
