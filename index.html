@@ -1348,17 +1348,16 @@ async function loadInventory() {
   const container = document.getElementById('inventory-container');
   container.innerHTML = `<div class="loader"><div class="spinner"></div> Loading...</div>`;
 
-  // Get all inventory tasks (ones with minimum_qty set)
   const tasks = await api(`tasks?minimum_qty=not.is.null&is_active=eq.true&select=*`);
   if (!tasks.length) { container.innerHTML = `<div class="loader">No inventory items found</div>`; return; }
 
   const taskIds = tasks.map(t => t.id).join(',');
-  // Get latest stock log per task for today
-  const logs = await api(`stock_logs?task_id=in.(${taskIds})&date=eq.${today()}&select=*&order=logged_at.desc`);
 
-  // Get latest log per task
-  const latestLog = {};
-  logs.forEach(l => { if (!latestLog[l.task_id]) latestLog[l.task_id] = l; });
+  // Get latest physical count per task (all time, not just today)
+  const allLogs = await api(`stock_logs?task_id=in.(${taskIds})&select=*&order=logged_at.desc`);
+
+  // Get all purchases linked to inventory tasks
+  const allPurchases = await api(`expenses?linked_task_id=in.(${taskIds})&select=*&order=logged_at.asc`);
 
   let lowCount = 0;
   const cats = [...new Set(tasks.map(t => t.category))];
@@ -1367,21 +1366,35 @@ async function loadInventory() {
   cats.forEach(cat => {
     html += `<div class="category-block"><div class="category-title">${cat}</div><div class="inv-grid">`;
     tasks.filter(t => t.category === cat).forEach(t => {
-      const log = latestLog[t.id];
-      const qty = log ? log.quantity : null;
-      const isLow = qty !== null && qty < t.minimum_qty;
-      const isOk = qty !== null && qty >= t.minimum_qty;
+      // Latest physical count for this task
+      const latestLog = allLogs.find(l => l.task_id === t.id);
+      const baseQty = latestLog ? latestLog.quantity : null;
+      const baseTime = latestLog ? new Date(latestLog.logged_at) : null;
+
+      // Sum purchases AFTER the last physical count
+      const purchasesAfter = allPurchases.filter(p =>
+        p.linked_task_id === t.id &&
+        p.quantity &&
+        (baseTime === null || new Date(p.logged_at) > baseTime)
+      );
+      const purchasedQty = purchasesAfter.reduce((sum, p) => sum + (p.quantity || 0), 0);
+
+      const totalQty = baseQty !== null ? baseQty + purchasedQty : null;
+      const isLow = totalQty !== null && totalQty < t.minimum_qty;
+      const isOk = totalQty !== null && totalQty >= t.minimum_qty;
       if (isLow) lowCount++;
 
-      // Clean display name (strip the "- X" minimum hint from title)
       const name = t.title.replace(/\s*-\s*\d+(\s+sets?)?$/i, '').trim();
+      const lastCountedStr = latestLog ? new Date(latestLog.logged_at).toLocaleDateString('en-IN', {day:'numeric',month:'short'}) : null;
 
       html += `<div class="inv-card ${isLow?'low':isOk?'ok':''}">
         <div class="inv-item-name">${name}</div>
-        <div class="inv-qty">${qty !== null ? qty : '—'}</div>
+        <div class="inv-qty">${totalQty !== null ? totalQty : '—'}</div>
         <div class="inv-min">Min: ${t.minimum_qty}</div>
+        ${purchasedQty > 0 ? `<div style="font-size:11px;color:var(--green);margin-top:4px">+${purchasedQty} purchased</div>` : ''}
+        ${lastCountedStr ? `<div style="font-size:10px;color:var(--muted);margin-top:3px">Counted: ${lastCountedStr}</div>` : ''}
         ${isLow ? '<div class="inv-warning-badge">LOW STOCK</div>' : ''}
-        ${qty === null ? '<div style="font-size:11px;color:var(--muted);margin-top:6px">Not logged today</div>' : ''}
+        ${totalQty === null ? '<div style="font-size:11px;color:var(--muted);margin-top:6px">Not logged yet</div>' : ''}
       </div>`;
     });
     html += `</div></div>`;
@@ -1478,8 +1491,8 @@ async function logExpense() {
   const invQty = parseInt(document.getElementById('exp-inv-qty').value) || null;
 
   if (!desc || isNaN(amount) || amount <= 0 || !date) { alert('Fill in description, amount and date'); return; }
+  if (category === 'Inventory' && linkedTaskId && !invQty) { alert('Enter quantity purchased'); return; }
 
-  // Log the expense
   await api('expenses', {
     method: 'POST',
     body: JSON.stringify({
@@ -1495,34 +1508,13 @@ async function logExpense() {
     })
   });
 
-  // If linked to inventory item and qty provided, log a stock entry too
-  if (linkedTaskId && invQty !== null) {
-    const task = await api(`tasks?id=eq.${linkedTaskId}&select=*`);
-    if (task[0]) {
-      // Get today's latest stock log for this item
-      const existing = await api(`stock_logs?task_id=eq.${linkedTaskId}&date=eq.${date}&select=*&order=logged_at.desc&limit=1`);
-      const currentQty = existing[0] ? existing[0].quantity : 0;
-      const newQty = currentQty + invQty;
-
-      await api('stock_logs', {
-        method: 'POST',
-        body: JSON.stringify({
-          task_id: linkedTaskId,
-          user_id: currentUser.id,
-          location: currentUser.location || 'Hebbal',
-          date,
-          quantity: newQty,
-          minimum: task[0].minimum_qty
-        })
-      });
-    }
-  }
-
   // Clear form
   document.getElementById('exp-desc').value = '';
   document.getElementById('exp-amount').value = '';
   document.getElementById('exp-inv-qty').value = '';
   document.getElementById('exp-inv-item').value = '';
+  document.getElementById('inv-link-row').style.display = 'none';
+  document.getElementById('exp-category').value = 'Inventory';
 
   loadExpenses();
 }
