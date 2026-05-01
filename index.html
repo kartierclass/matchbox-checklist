@@ -947,10 +947,6 @@ function loginSuccess(user) {
   document.getElementById('today-display').textContent = fmtDate(today());
 
   // Show admin tab only for admin
-  if (user.role === 'admin') {
-    loadAdminTasks();
-    loadUsers();
-  }
 
   // History tab for manager + admin
   if (user.role !== 'AM' && user.role !== 'OM' && user.role !== 'BM') {
