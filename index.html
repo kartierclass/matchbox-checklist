@@ -812,14 +812,13 @@
       <div class="topbar-info">Signed in as <span id="user-name-display">—</span> · <span id="user-role-display">—</span></div>
     </div>
     <button class="logout-btn" onclick="doLogout()">Sign out</button>
+    <button class="logout-btn" onclick="window.location.href='admin.html'" style="border-color:var(--green);color:var(--green)">Admin ↗</button>
   </div>
 
   <div class="tabs-bar" id="tabs-bar">
     <button class="tab active" onclick="switchTab('checklist', this)">Checklist</button>
     <button class="tab" onclick="switchTab('history', this)">History</button>
     <button class="tab" id="inventory-tab" onclick="switchTab('inventory', this)">Inventory</button>
-    <button class="tab hidden" id="expenses-tab" onclick="switchTab('expenses', this)">Expenses</button>
-    <button class="tab hidden" id="admin-tab" onclick="switchTab('admin', this)">Admin</button>
   </div>
 
   <!-- CHECKLIST TAB -->
@@ -880,140 +879,6 @@
       <div class="modal-btns">
         <button class="modal-cancel" onclick="closeStockModal()">Cancel</button>
         <button class="modal-confirm" onclick="submitStock()">Log Stock</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- EXPENSES TAB -->
-  <div class="content hidden" id="tab-expenses">
-    <div class="date-header">
-      <div class="date-display"><small>Expenses</small><span id="exp-month-display">—</span></div>
-      <div class="progress-pill">Total: <b id="exp-total-display">₹0</b></div>
-    </div>
-
-    <!-- Month picker -->
-    <div style="display:flex;gap:10px;margin-bottom:24px;align-items:center;flex-wrap:wrap">
-      <input type="month" class="date-picker" id="exp-month-picker" onchange="loadExpenses()">
-      <select class="form-select" id="exp-cat-filter" onchange="loadExpenses()" style="width:auto">
-        <option value="all">All Categories</option>
-        <option value="Inventory">Inventory</option>
-        <option value="Utilities">Utilities</option>
-        <option value="Rent">Rent</option>
-        <option value="Maintenance">Maintenance</option>
-        <option value="Salaries">Salaries</option>
-        <option value="Marketing">Marketing</option>
-        <option value="Miscellaneous">Miscellaneous</option>
-      </select>
-    </div>
-
-    <!-- Monthly summary cards -->
-    <div id="exp-summary-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px"></div>
-
-    <!-- Log expense form -->
-    <div class="add-task-form" style="margin-bottom:28px">
-      <div style="font-size:13px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px">Log Expense / Purchase</div>
-      <div class="form-row">
-        <input class="form-input" id="exp-desc" placeholder="Description" />
-        <input class="form-input" id="exp-amount" type="number" placeholder="Amount (₹)" inputmode="decimal" />
-      </div>
-      <div class="form-row">
-        <select class="form-select" id="exp-category">
-          <option value="Inventory">Inventory</option>
-          <option value="Utilities">Utilities</option>
-          <option value="Rent">Rent</option>
-          <option value="Maintenance">Maintenance</option>
-          <option value="Salaries">Salaries</option>
-          <option value="Marketing">Marketing</option>
-          <option value="Miscellaneous">Miscellaneous</option>
-        </select>
-        <select class="form-select" id="exp-payment">
-          <option value="Cash">Cash</option>
-          <option value="UPI">UPI</option>
-          <option value="Bank Transfer">Bank Transfer</option>
-          <option value="Credit Card">Credit Card</option>
-        </select>
-      </div>
-      <!-- Inventory link (shows only when category = Inventory) -->
-      <div id="inv-link-row" class="form-row" style="display:none">
-        <select class="form-select" id="exp-inv-item">
-          <option value="">— Link to inventory item (optional) —</option>
-        </select>
-        <input class="form-input" id="exp-inv-qty" type="number" placeholder="Qty purchased" inputmode="numeric" />
-      </div>
-      <div class="form-row">
-        <input class="form-input" id="exp-date" type="date" />
-        <button class="add-btn" onclick="logExpense()" style="white-space:nowrap">+ Log Expense</button>
-      </div>
-    </div>
-
-    <!-- Expense log -->
-    <div class="section-heading" style="margin-bottom:16px">Recent Entries</div>
-    <div id="exp-log-container"><div class="loader"><div class="spinner"></div> Loading...</div></div>
-  </div>
-
-  <!-- ADMIN TAB -->
-  <div class="content hidden" id="tab-admin">
-    <div class="admin-section">
-      <div class="section-heading">Manage Tasks</div>
-
-      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-        <select class="form-select" id="admin-role-filter" onchange="loadAdminTasks()" style="width:auto">
-          <option value="AM">AM Tasks</option>
-          <option value="OM">OM Tasks</option>
-          <option value="BM">BM Tasks</option>
-        </select>
-        <select class="form-select" id="admin-freq-filter" onchange="loadAdminTasks()" style="width:auto">
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-      </div>
-
-      <div id="admin-tasks-container"><div class="loader"><div class="spinner"></div> Loading...</div></div>
-
-      <div class="add-task-form">
-        <div style="font-size:13px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Add New Task</div>
-        <div class="form-row">
-          <input class="form-input full" id="new-task-title" placeholder="Task description" />
-        </div>
-        <div class="form-row">
-          <input class="form-input" id="new-task-category" placeholder="Category" />
-          <select class="form-select" id="new-task-role">
-            <option value="AM">AM</option>
-            <option value="OM">OM</option>
-            <option value="BM">BM</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <select class="form-select" id="new-task-freq">
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
-          </select>
-          <button class="add-btn" onclick="addTask()">+ Add Task</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="admin-section">
-      <div class="section-heading">User Management</div>
-      <div class="admin-card" id="users-container"><div class="loader"><div class="spinner"></div> Loading...</div></div>
-      <div class="add-task-form">
-        <div style="font-size:13px;font-weight:600;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;">Add User</div>
-        <div class="form-row">
-          <input class="form-input" id="new-user-name" placeholder="Full name" />
-          <input class="form-input" id="new-user-pin" placeholder="PIN (4-6 digits)" type="password" inputmode="numeric" maxlength="6" />
-        </div>
-        <div class="form-row">
-          <select class="form-select" id="new-user-role">
-            <option value="AM">AM - Arena Manager</option>
-            <option value="OM">OM - Operations Manager</option>
-            <option value="BM">BM - Bookings Manager</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-          </select>
-          <button class="add-btn" onclick="addUser()">+ Add User</button>
-        </div>
       </div>
     </div>
   </div>
@@ -1083,19 +948,12 @@ function loginSuccess(user) {
 
   // Show admin tab only for admin
   if (user.role === 'admin') {
-    document.getElementById('admin-tab').classList.remove('hidden');
-    document.getElementById('expenses-tab').classList.remove('hidden');
     loadAdminTasks();
     loadUsers();
   }
 
-  if (user.role === 'manager') {
-    document.getElementById('expenses-tab').classList.remove('hidden');
-  }
-
   // History tab for manager + admin
   if (user.role !== 'AM' && user.role !== 'OM' && user.role !== 'BM') {
-    // manager / admin — set history date
     document.getElementById('history-date').value = today();
   }
 
@@ -1115,16 +973,14 @@ function switchTab(tab, btn) {
   document.querySelectorAll('.tabs-bar .tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   currentTab = tab;
-  ['checklist','history','admin','inventory','expenses'].forEach(t => {
+  ['checklist','history','inventory'].forEach(t => {
     document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'history' && !document.getElementById('history-date').value) {
     document.getElementById('history-date').value = today();
     loadHistory();
   }
-  if (tab === 'admin') { loadAdminTasks(); loadUsers(); }
   if (tab === 'inventory') { loadInventory(); }
-  if (tab === 'expenses') { initExpenses(); }
 }
 
 function switchFreq(freq, btn) {
@@ -1405,198 +1261,6 @@ async function loadInventory() {
   badge.innerHTML = lowCount > 0 ? `<b style="color:var(--red)">${lowCount} low</b>` : `<b>All good ✓</b>`;
 }
 
-// ── EXPENSES ──
-function initExpenses() {
-  const picker = document.getElementById('exp-month-picker');
-  if (!picker.value) {
-    const now = new Date();
-    picker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-  }
-  document.getElementById('exp-date').value = today();
-
-  // Populate inventory item dropdown
-  api('tasks?minimum_qty=not.is.null&is_active=eq.true&select=id,title').then(items => {
-    const sel = document.getElementById('exp-inv-item');
-    sel.innerHTML = '<option value="">— Link to inventory item (optional) —</option>';
-    items.forEach(i => sel.innerHTML += `<option value="${i.id}">${i.title}</option>`);
-  });
-
-  // Show/hide inventory link row based on category
-  document.getElementById('exp-category').onchange = function() {
-    document.getElementById('inv-link-row').style.display = this.value === 'Inventory' ? 'grid' : 'none';
-  };
-
-  loadExpenses();
-}
-
-async function loadExpenses() {
-  const month = document.getElementById('exp-month-picker').value;
-  const catFilter = document.getElementById('exp-cat-filter').value;
-  if (!month) return;
-
-  const [year, mon] = month.split('-');
-  const startDate = `${year}-${mon}-01`;
-  const endDate = new Date(year, mon, 0).toISOString().split('T')[0]; // last day of month
-
-  document.getElementById('exp-month-display').textContent = new Date(year, mon-1).toLocaleDateString('en-IN', { month:'long', year:'numeric' });
-
-  let query = `expenses?date=gte.${startDate}&date=lte.${endDate}&order=logged_at.desc&select=*`;
-  if (catFilter !== 'all') query += `&category=eq.${catFilter}`;
-
-  const expenses = await api(query);
-
-  // Summary by category
-  const totals = {};
-  let grandTotal = 0;
-  expenses.forEach(e => {
-    totals[e.category] = (totals[e.category] || 0) + parseFloat(e.amount);
-    grandTotal += parseFloat(e.amount);
-  });
-
-  document.getElementById('exp-total-display').textContent = `₹${grandTotal.toLocaleString('en-IN')}`;
-
-  const summaryGrid = document.getElementById('exp-summary-grid');
-  summaryGrid.innerHTML = Object.entries(totals).map(([cat, amt]) => `
-    <div class="summary-card">
-      <div class="summary-card-label">${cat}</div>
-      <div class="summary-card-amt">₹${amt.toLocaleString('en-IN')}</div>
-    </div>`).join('');
-
-  // Log entries
-  const container = document.getElementById('exp-log-container');
-  if (!expenses.length) { container.innerHTML = `<div class="loader" style="color:var(--muted)">No expenses this month</div>`; return; }
-
-  container.innerHTML = expenses.map(e => `
-    <div class="exp-entry">
-      <div class="exp-entry-left">
-        <div class="exp-entry-desc">
-          <span class="exp-cat-badge">${e.category}</span>${e.description}
-        </div>
-        <div class="exp-entry-meta">${new Date(e.date+'T00:00:00').toLocaleDateString('en-IN', {day:'numeric',month:'short'})} · ${e.payment_method || '—'}</div>
-        ${e.linked_task_id ? `<div class="exp-entry-inv">↗ Updates inventory</div>` : ''}
-      </div>
-      <div class="exp-entry-right">
-        <div class="exp-amount">₹${parseFloat(e.amount).toLocaleString('en-IN')}</div>
-      </div>
-    </div>`).join('');
-}
-
-async function logExpense() {
-  const desc = document.getElementById('exp-desc').value.trim();
-  const amount = parseFloat(document.getElementById('exp-amount').value);
-  const category = document.getElementById('exp-category').value;
-  const payment = document.getElementById('exp-payment').value;
-  const date = document.getElementById('exp-date').value;
-  const linkedTaskId = document.getElementById('exp-inv-item').value || null;
-  const invQty = parseInt(document.getElementById('exp-inv-qty').value) || null;
-
-  if (!desc || isNaN(amount) || amount <= 0 || !date) { alert('Fill in description, amount and date'); return; }
-  if (category === 'Inventory' && linkedTaskId && !invQty) { alert('Enter quantity purchased'); return; }
-
-  await api('expenses', {
-    method: 'POST',
-    body: JSON.stringify({
-      user_id: currentUser.id,
-      location: currentUser.location || 'Hebbal',
-      date,
-      category,
-      description: desc,
-      amount,
-      payment_method: payment,
-      linked_task_id: linkedTaskId,
-      quantity: invQty
-    })
-  });
-
-  // Clear form
-  document.getElementById('exp-desc').value = '';
-  document.getElementById('exp-amount').value = '';
-  document.getElementById('exp-inv-qty').value = '';
-  document.getElementById('exp-inv-item').value = '';
-  document.getElementById('inv-link-row').style.display = 'none';
-  document.getElementById('exp-category').value = 'Inventory';
-
-  loadExpenses();
-}
-
-// ── ADMIN: TASKS ──
-async function loadAdminTasks() {
-  const role = document.getElementById('admin-role-filter').value;
-  const freq = document.getElementById('admin-freq-filter').value;
-  const tasks = await api(`tasks?role=eq.${role}&frequency=eq.${freq}&select=*`);
-  const container = document.getElementById('admin-tasks-container');
-
-  if (!tasks.length) { container.innerHTML = `<div class="loader">No tasks yet</div>`; return; }
-
-  let html = '<div class="admin-card">';
-  tasks.forEach(t => {
-    html += `<div class="admin-task-row">
-      <div class="admin-task-info">
-        <div class="admin-task-title">${t.title}</div>
-        <div class="admin-task-meta">${t.category}</div>
-      </div>
-      <button class="toggle-btn ${t.is_active?'active':'inactive'}" onclick="toggleTaskActive('${t.id}', ${t.is_active})">
-        ${t.is_active ? 'Active' : 'Inactive'}
-      </button>
-    </div>`;
-  });
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-async function toggleTaskActive(id, current) {
-  await api(`tasks?id=eq.${id}`, { method: 'PATCH', body: JSON.stringify({ is_active: !current }) });
-  loadAdminTasks();
-}
-
-async function addTask() {
-  const title = document.getElementById('new-task-title').value.trim();
-  const category = document.getElementById('new-task-category').value.trim();
-  const role = document.getElementById('new-task-role').value;
-  const frequency = document.getElementById('new-task-freq').value;
-  if (!title || !category) { alert('Fill in title and category'); return; }
-  await api('tasks', { method: 'POST', body: JSON.stringify({ title, category, role, frequency }) });
-  document.getElementById('new-task-title').value = '';
-  document.getElementById('new-task-category').value = '';
-  loadAdminTasks();
-}
-
-// ── ADMIN: USERS ──
-async function loadUsers() {
-  const users = await api('users?select=*');
-  const container = document.getElementById('users-container');
-  if (!users.length) { container.innerHTML = `<div class="loader">No users yet</div>`; return; }
-
-  let html = '';
-  users.forEach(u => {
-    html += `<div class="admin-task-row">
-      <div class="admin-task-info">
-        <div class="admin-task-title">${u.name}</div>
-        <div class="admin-task-meta">${u.role.toUpperCase()} · PIN: ${'•'.repeat(u.pin.length)}</div>
-      </div>
-      <button class="toggle-btn inactive" onclick="deleteUser('${u.id}', '${u.name}')">Remove</button>
-    </div>`;
-  });
-  container.innerHTML = html;
-}
-
-async function addUser() {
-  const name = document.getElementById('new-user-name').value.trim();
-  const pin = document.getElementById('new-user-pin').value.trim();
-  const role = document.getElementById('new-user-role').value;
-  if (!name || !pin) { alert('Fill in name and PIN'); return; }
-  if (pin.length < 4) { alert('PIN must be at least 4 digits'); return; }
-  await api('users', { method: 'POST', body: JSON.stringify({ name, pin, role, location: 'Hebbal' }) });
-  document.getElementById('new-user-name').value = '';
-  document.getElementById('new-user-pin').value = '';
-  loadUsers();
-}
-
-async function deleteUser(id, name) {
-  if (!confirm(`Remove ${name}?`)) return;
-  await api(`users?id=eq.${id}`, { method: 'DELETE', prefer: '' });
-  loadUsers();
-}
 </script>
 </body>
 </html>
